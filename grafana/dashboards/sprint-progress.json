@@ -1,0 +1,473 @@
+{
+  "id": null,
+  "title": "OpenProject Sprint Progress & Projects",
+  "tags": [
+    "openproject",
+    "sprint",
+    "project",
+    "progress"
+  ],
+  "timezone": "browser",
+  "refresh": "5m",
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Active Projects",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) as project_count FROM boards WHERE type = 'openproject'",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "displayName": "Total Projects"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Total Issues Across Projects",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) as total_issues FROM issues WHERE id LIKE 'openproject:%'",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "displayName": "Total Issues"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "title": "Completion Rate (%)",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT ROUND((COUNT(CASE WHEN status = 'DONE' THEN 1 END) * 100.0) / COUNT(*), 1) as completion_rate FROM issues WHERE id LIKE 'openproject:%'",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent",
+          "displayName": "Completion Rate"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 4,
+      "title": "Average Lead Time (Days)",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT ROUND(AVG(lead_time_minutes)/1440, 1) as avg_lead_time FROM issues WHERE status = 'DONE' AND id LIKE 'openproject:%' AND lead_time_minutes IS NOT NULL",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 7
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          },
+          "unit": "d",
+          "displayName": "Avg Lead Time"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      }
+    },
+    {
+      "id": 5,
+      "title": "Project Health Overview",
+      "type": "table",
+      "targets": [
+        {
+          "rawSql": "SELECT b.name as 'Project', COUNT(i.id) as 'Total Issues', COUNT(CASE WHEN i.status = 'DONE' THEN 1 END) as 'Completed', COUNT(CASE WHEN i.status IN ('TODO', 'IN_PROGRESS') THEN 1 END) as 'Active', ROUND((COUNT(CASE WHEN i.status = 'DONE' THEN 1 END) * 100.0) / NULLIF(COUNT(i.id), 0), 1) as 'Completion %', ROUND(AVG(CASE WHEN i.status = 'DONE' AND i.lead_time_minutes IS NOT NULL THEN i.lead_time_minutes END)/1440, 1) as 'Avg Lead Time (Days)', ROUND(SUM(CASE WHEN w.logged_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN w.time_spent_minutes ELSE 0 END)/60, 1) as 'Hours (30d)' FROM boards b LEFT JOIN board_issues bi ON b.id = bi.board_id LEFT JOIN issues i ON bi.issue_id = i.id LEFT JOIN issue_worklogs w ON i.id = w.issue_id WHERE b.type = 'openproject' GROUP BY b.id, b.name ORDER BY 'Total Issues' DESC",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Completion %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 50
+                    },
+                    {
+                      "color": "green",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hours (30d)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "h"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg Lead Time (Days)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "d"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      }
+    },
+    {
+      "id": 6,
+      "title": "Sprint Progress (Version-based Grouping)",
+      "type": "table",
+      "targets": [
+        {
+          "rawSql": "SELECT COALESCE(s.name, 'No Sprint') as 'Sprint/Version', COUNT(i.id) as 'Total Issues', COUNT(CASE WHEN i.status = 'DONE' THEN 1 END) as 'Completed', COUNT(CASE WHEN i.status IN ('TODO', 'IN_PROGRESS') THEN 1 END) as 'In Progress', ROUND((COUNT(CASE WHEN i.status = 'DONE' THEN 1 END) * 100.0) / NULLIF(COUNT(i.id), 0), 1) as 'Progress %', ROUND(SUM(CASE WHEN w.logged_date >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN w.time_spent_minutes ELSE 0 END)/60, 1) as 'Hours (7d)' FROM issues i LEFT JOIN sprint_issues si ON i.id = si.issue_id LEFT JOIN sprints s ON si.sprint_id = s.id LEFT JOIN issue_worklogs w ON i.id = w.issue_id WHERE i.id LIKE 'openproject:%' GROUP BY s.name ORDER BY 'Progress %' DESC, 'Total Issues' DESC LIMIT 20",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Progress %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 30
+                    },
+                    {
+                      "color": "green",
+                      "value": 70
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hours (7d)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "h"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      }
+    },
+    {
+      "id": 7,
+      "title": "Weekly Progress Trend",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(DATE_SUB(created_date, INTERVAL WEEKDAY(created_date) DAY)) as week_start, COUNT(*) as issues_created FROM issues WHERE id LIKE 'openproject:%' AND created_date >= DATE_SUB(NOW(), INTERVAL 12 WEEK) GROUP BY week_start ORDER BY week_start",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        },
+        {
+          "rawSql": "SELECT DATE(DATE_SUB(resolution_date, INTERVAL WEEKDAY(resolution_date) DAY)) as week_start, COUNT(*) as issues_completed FROM issues WHERE status = 'DONE' AND id LIKE 'openproject:%' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 12 WEEK) GROUP BY week_start ORDER BY week_start",
+          "refId": "B",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "pointSize": 5
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Issues Created"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Issues Completed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      }
+    },
+    {
+      "id": 8,
+      "title": "Issue Priority Distribution",
+      "type": "barchart",
+      "targets": [
+        {
+          "rawSql": "SELECT priority, COUNT(CASE WHEN status IN ('TODO', 'IN_PROGRESS') THEN 1 END) as active_count, COUNT(CASE WHEN status = 'DONE' THEN 1 END) as completed_count FROM issues WHERE id LIKE 'openproject:%' AND priority IS NOT NULL AND priority != '' GROUP BY priority ORDER BY FIELD(priority, 'Highest', 'High', 'Medium', 'Low', 'Lowest'), active_count DESC",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "displayMode": "list"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      }
+    }
+  ],
+  "schemaVersion": 27,
+  "version": 1,
+  "links": []
+}

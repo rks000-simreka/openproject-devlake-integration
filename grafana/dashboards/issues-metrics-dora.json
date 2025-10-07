@@ -1,0 +1,468 @@
+{
+  "id": null,
+  "title": "OpenProject Issues Metrics & DORA",
+  "tags": [
+    "openproject",
+    "dora",
+    "metrics",
+    "issues"
+  ],
+  "timezone": "browser",
+  "refresh": "1d",
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Lead Time for Changes (Days)",
+      "description": "Average time from issue creation to completion",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT ROUND(AVG(lead_time_minutes)/1440, 1) as avg_lead_time_days FROM issues WHERE status = 'DONE' AND id LIKE 'openproject:%' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND lead_time_minutes IS NOT NULL",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 7
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          },
+          "unit": "d",
+          "displayName": "Avg Lead Time"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Deployment Frequency",
+      "description": "Issues completed per week",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT ROUND(COUNT(*)/4, 1) as issues_per_week FROM issues WHERE status = 'DONE' AND id LIKE 'openproject:%' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 28 DAY)",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 5
+              }
+            ]
+          },
+          "displayName": "Issues/Week"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "title": "Change Failure Rate",
+      "description": "Percentage of bugs vs total completed issues",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT ROUND((SUM(CASE WHEN type = 'BUG' THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(*), 0), 1) as failure_rate FROM issues WHERE status = 'DONE' AND id LIKE 'openproject:%' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "percent",
+          "displayName": "Failure Rate"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 4,
+      "title": "Mean Time to Recovery",
+      "description": "Average time to resolve bugs (days)",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT COALESCE(ROUND(AVG(lead_time_minutes)/1440, 1), 0) as avg_recovery_days FROM issues WHERE type = 'BUG' AND status = 'DONE' AND id LIKE 'openproject:%' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND lead_time_minutes IS NOT NULL",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 7
+              }
+            ]
+          },
+          "unit": "d",
+          "displayName": "MTTR"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      }
+    },
+    {
+      "id": 5,
+      "title": "Lead Time Trend (Daily Average)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(resolution_date) as time, ROUND(AVG(lead_time_minutes)/1440, 1) as avg_lead_time_days FROM issues WHERE status = 'DONE' AND id LIKE 'openproject:%' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 90 DAY) AND lead_time_minutes IS NOT NULL GROUP BY DATE(resolution_date) ORDER BY time",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "pointSize": 5
+          },
+          "unit": "d",
+          "displayName": "Lead Time (Days)"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      }
+    },
+    {
+      "id": 6,
+      "title": "Issue Velocity (Weekly)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(DATE_SUB(resolution_date, INTERVAL WEEKDAY(resolution_date) DAY)) as week_start, COUNT(*) as completed_count FROM issues WHERE status = 'DONE' AND id LIKE 'openproject:%' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 90 DAY) GROUP BY week_start ORDER BY week_start",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "bars",
+            "fillOpacity": 80
+          },
+          "displayName": "Issues Completed"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      }
+    },
+    {
+      "id": 7,
+      "title": "Issue Age Distribution (Active Issues)",
+      "type": "barchart",
+      "targets": [
+        {
+          "rawSql": "SELECT CASE WHEN DATEDIFF(NOW(), created_date) <= 7 THEN '0-7 days' WHEN DATEDIFF(NOW(), created_date) <= 14 THEN '8-14 days' WHEN DATEDIFF(NOW(), created_date) <= 30 THEN '15-30 days' WHEN DATEDIFF(NOW(), created_date) <= 60 THEN '31-60 days' ELSE '60+ days' END as age_range, COUNT(*) as issue_count FROM issues WHERE status IN ('TODO', 'IN_PROGRESS') AND id LIKE 'openproject:%' GROUP BY age_range ORDER BY FIELD(age_range, '0-7 days', '8-14 days', '15-30 days', '31-60 days', '60+ days')",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "displayMode": "list"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      }
+    },
+    {
+      "id": 8,
+      "title": "Bug Resolution Time Distribution",
+      "type": "barchart",
+      "targets": [
+        {
+          "rawSql": "SELECT CASE WHEN lead_time_minutes <= 1440 THEN '0-1 days' WHEN lead_time_minutes <= 4320 THEN '1-3 days' WHEN lead_time_minutes <= 10080 THEN '3-7 days' WHEN lead_time_minutes <= 43200 THEN '1-4 weeks' ELSE '4+ weeks' END as resolution_time, COUNT(*) as bug_count FROM issues WHERE type = 'BUG' AND status = 'DONE' AND id LIKE 'openproject:%' AND lead_time_minutes IS NOT NULL AND resolution_date >= DATE_SUB(NOW(), INTERVAL 90 DAY) GROUP BY resolution_time ORDER BY FIELD(resolution_time, '0-1 days', '1-3 days', '3-7 days', '1-4 weeks', '4+ weeks')",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "displayMode": "list"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      }
+    },
+    {
+      "id": 9,
+      "title": "Detailed Issue Metrics by Type",
+      "type": "table",
+      "targets": [
+        {
+          "rawSql": "SELECT type as 'Issue Type', COUNT(*) as 'Total', COUNT(CASE WHEN status = 'DONE' THEN 1 END) as 'Completed', COUNT(CASE WHEN status IN ('TODO', 'IN_PROGRESS') THEN 1 END) as 'Active', ROUND((COUNT(CASE WHEN status = 'DONE' THEN 1 END) * 100.0) / NULLIF(COUNT(*), 0), 1) as 'Completion %', ROUND(AVG(CASE WHEN status = 'DONE' AND lead_time_minutes IS NOT NULL THEN lead_time_minutes END)/1440, 1) as 'Avg Lead Time (Days)', COUNT(CASE WHEN status = 'DONE' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as 'Completed (30d)' FROM issues WHERE id LIKE 'openproject:%' GROUP BY type ORDER BY 'Total' DESC",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Completion %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 50
+                    },
+                    {
+                      "color": "green",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg Lead Time (Days)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "d"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      }
+    },
+    {
+      "id": 10,
+      "title": "Time Logging Analysis",
+      "type": "table",
+      "targets": [
+        {
+          "rawSql": "SELECT i.original_project as 'Project', COUNT(w.id) as 'Worklogs', ROUND(SUM(w.time_spent_minutes)/60, 1) as 'Total Hours', ROUND(AVG(w.time_spent_minutes)/60, 2) as 'Avg Hours/Log', COUNT(DISTINCT w.author_id) as 'Contributors', ROUND(SUM(CASE WHEN w.logged_date >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN w.time_spent_minutes ELSE 0 END)/60, 1) as 'Hours (7d)', ROUND(SUM(CASE WHEN w.logged_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN w.time_spent_minutes ELSE 0 END)/60, 1) as 'Hours (30d)' FROM issues i LEFT JOIN issue_worklogs w ON i.id = w.issue_id WHERE i.id LIKE 'openproject:%' AND w.id IS NOT NULL GROUP BY i.original_project ORDER BY 'Total Hours' DESC",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*Hours.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "h"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      }
+    }
+  ],
+  "schemaVersion": 27,
+  "version": 1,
+  "links": []
+}

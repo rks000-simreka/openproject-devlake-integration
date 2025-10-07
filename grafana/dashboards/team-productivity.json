@@ -1,0 +1,414 @@
+{
+  "id": null,
+  "title": "OpenProject Team Productivity Dashboard",
+  "tags": [
+    "openproject",
+    "productivity",
+    "team"
+  ],
+  "timezone": "browser",
+  "refresh": "5m",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Active Team Members",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(DISTINCT assignee_name) as active_members FROM issues WHERE assignee_name IS NOT NULL AND assignee_name != '' AND id LIKE 'openproject:%' AND updated_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "displayName": "Active Members"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Issues Completed (30 Days)",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) as completed FROM issues WHERE status = 'DONE' AND id LIKE 'openproject:%' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "displayName": "Completed Issues"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "title": "Active Issues",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) as active FROM issues WHERE status IN ('TODO', 'IN_PROGRESS') AND id LIKE 'openproject:%'",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "displayName": "Active Issues"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 4,
+      "title": "Total Hours Logged (30 Days)",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT ROUND(SUM(time_spent_minutes)/60, 1) as total_hours FROM issue_worklogs WHERE id LIKE 'openproject:%' AND logged_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "displayName": "Hours Logged",
+          "unit": "h"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      }
+    },
+    {
+      "id": 5,
+      "title": "Team Productivity by Assignee",
+      "type": "barchart",
+      "targets": [
+        {
+          "rawSql": "SELECT assignee_name, COUNT(CASE WHEN status = 'DONE' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as completed, COUNT(CASE WHEN status IN ('TODO', 'IN_PROGRESS') THEN 1 END) as active FROM issues WHERE assignee_name IS NOT NULL AND assignee_name != '' AND id LIKE 'openproject:%' GROUP BY assignee_name HAVING (completed > 0 OR active > 0) ORDER BY completed DESC, active DESC LIMIT 15",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "displayMode": "list",
+            "orientation": "horizontal"
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      }
+    },
+    {
+      "id": 6,
+      "title": "Time Logging by Team Member (30 Days)",
+      "type": "barchart",
+      "targets": [
+        {
+          "rawSql": "SELECT a.full_name as author_name, ROUND(SUM(w.time_spent_minutes)/60, 1) as hours_logged FROM issue_worklogs w LEFT JOIN accounts a ON w.author_id = a.id WHERE w.id LIKE 'openproject:%' AND w.logged_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND a.full_name IS NOT NULL AND a.full_name != '' GROUP BY a.full_name ORDER BY hours_logged DESC LIMIT 15",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "displayMode": "list",
+            "orientation": "horizontal"
+          },
+          "unit": "h"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      }
+    },
+    {
+      "id": 7,
+      "title": "Daily Issue Completion Trend",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(resolution_date) as time, COUNT(*) as completed FROM issues WHERE status = 'DONE' AND id LIKE 'openproject:%' AND resolution_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY DATE(resolution_date) ORDER BY time",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "auto"
+          },
+          "displayName": "Issues Completed"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      }
+    },
+    {
+      "id": 8,
+      "title": "Daily Time Logging Trend",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT DATE(w.logged_date) as time, ROUND(SUM(w.time_spent_minutes)/60, 1) as hours_logged FROM issue_worklogs w WHERE w.id LIKE 'openproject:%' AND w.logged_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY DATE(w.logged_date) ORDER BY time",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "pointSize": 5
+          },
+          "displayName": "Hours Logged",
+          "unit": "h"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      }
+    },
+    {
+      "id": 9,
+      "title": "Issue Type Distribution (30 Days)",
+      "type": "piechart",
+      "targets": [
+        {
+          "rawSql": "SELECT type, COUNT(*) as count FROM issues WHERE id LIKE 'openproject:%' AND (created_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) OR updated_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) GROUP BY type ORDER BY count DESC",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "tooltip": {
+          "mode": "single"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      }
+    },
+    {
+      "id": 10,
+      "title": "Status Distribution",
+      "type": "piechart",
+      "targets": [
+        {
+          "rawSql": "SELECT status, COUNT(*) as count FROM issues WHERE id LIKE 'openproject:%' GROUP BY status ORDER BY count DESC",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "options": {
+        "pieType": "pie",
+        "tooltip": {
+          "mode": "single"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      }
+    },
+    {
+      "id": 11,
+      "title": "Team Performance Detailed Table",
+      "type": "table",
+      "targets": [
+        {
+          "rawSql": "SELECT i.assignee_name as 'Team Member', COUNT(CASE WHEN i.status = 'DONE' AND i.resolution_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as 'Completed (30d)', COUNT(CASE WHEN i.status IN ('TODO', 'IN_PROGRESS') THEN 1 END) as 'Active Issues', ROUND(AVG(CASE WHEN i.status = 'DONE' AND i.lead_time_minutes IS NOT NULL THEN i.lead_time_minutes END)/1440, 1) as 'Avg Lead Time (Days)', ROUND(SUM(CASE WHEN w.logged_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN w.time_spent_minutes ELSE 0 END)/60, 1) as 'Hours Logged (30d)' FROM issues i LEFT JOIN issue_worklogs w ON i.id = w.issue_id WHERE i.assignee_name IS NOT NULL AND i.assignee_name != '' AND i.id LIKE 'openproject:%' GROUP BY i.assignee_name ORDER BY 'Completed (30d)' DESC, 'Hours Logged (30d)' DESC",
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "ff0bq13cyt81sb"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hours Logged (30d)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "h"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg Lead Time (Days)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "d"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      }
+    }
+  ],
+  "schemaVersion": 27,
+  "version": 1,
+  "links": []
+}
