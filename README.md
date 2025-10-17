@@ -2,6 +2,17 @@
 
 A complete data integration pipeline that collects, transforms, and loads OpenProject data into Apache DevLake for analytics and visualization.
 
+---
+
+## 🚀 **New User? Start Here!**
+
+### 👥 **For Colleagues Setting Up Grafana:**
+**→ [GETTING_STARTED.md](GETTING_STARTED.md) ← Click here to begin!**
+
+This guide will walk you through setting up Grafana dashboards in ~10 minutes.
+
+---
+
 ## 🎯 Overview
 
 This integration enables you to:
@@ -9,6 +20,13 @@ This integration enables you to:
 - **Transform** data through tool-layer and domain-layer schemas  
 - **Analyze** project metrics, team performance, and work patterns
 - **Visualize** data in Grafana dashboards
+
+## 📚 Documentation
+
+- **[GRAFANA_QUICKSTART.md](GRAFANA_QUICKSTART.md)** - Complete Grafana setup guide for colleagues (START HERE for visualization)
+- **[GRAFANA_README.md](GRAFANA_README.md)** - Detailed Grafana documentation and dashboard overview
+- **[MANUAL_SETUP_GUIDE.md](MANUAL_SETUP_GUIDE.md)** - Manual dashboard import instructions
+- **[open_project_guide/](open_project_guide/)** - OpenProject API setup guides
 
 ## 📊 Pipeline Architecture
 
@@ -25,6 +43,8 @@ OpenProject API → Raw Tables → Tool Tables → Domain Tables → Analytics
 4. **Analysis**: Query domain tables for insights and dashboards
 
 ## 🚀 Quick Start
+
+> **👥 For Colleagues:** If you only need to set up Grafana dashboards (visualization), skip to **[Grafana Setup Guide](GRAFANA_QUICKSTART.md)** - this is a complete standalone guide.
 
 ### Prerequisites
 - Python 3.8+
